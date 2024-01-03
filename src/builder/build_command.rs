@@ -76,7 +76,7 @@ fn connect_nodes_with_actors(
 
         // recursively connect the inner nodes
         if !node.choices.is_empty() {
-            for (_, inner_builder) in node.choices.iter() {
+            for (_, _, inner_builder) in node.choices.iter() {
                 connect_nodes_with_actors(
                     inner_builder,
                     node_entities.clone(),
@@ -136,7 +136,7 @@ fn spawn_dialogue_entities(
         entities.push(e);
         build_node_entities.insert(n.id.clone(), e);
 
-        for (_, inner_builder) in n.choices.iter() {
+        for (_, _, inner_builder) in n.choices.iter() {
             let (inner_ents, inner_bne) = spawn_dialogue_entities(inner_builder, world);
             entities.extend(inner_ents);
             build_node_entities.extend(inner_bne);
@@ -218,11 +218,11 @@ fn form_graph(
                 // We have to spawn the branches from the inner builders
                 // and connect them to the choice node
                 let mut choices: Vec<Choice> = Vec::with_capacity(build_node.choices.len());
-                for (choice_text, inner_builder) in build_node.choices.iter() {
+                for (choice_text, check, inner_builder) in build_node.choices.iter() {
                     // recursively spawn the branches
                     let (branch_root, branch_leaves) =
                         form_graph(this_ent, inner_builder, node_entities, world);
-                    choices.push(Choice::new(choice_text, branch_root));
+                    choices.push(Choice::new(choice_text, (*check).clone(), branch_root));
                     leaves.extend(branch_leaves);
                 }
 
@@ -325,11 +325,11 @@ mod tests {
             .say("Hello")
             .choose(vec![
                 (
-                    "Choice 1".to_string(),
+                    "Choice 1".to_string(), None,
                     TalkBuilder::default().say("Hi").to_owned(),
                 ),
                 (
-                    "Choice 2".to_string(),
+                    "Choice 2".to_string(), None,
                     TalkBuilder::default().say("World!").to_owned(),
                 ),
             ])
@@ -383,10 +383,10 @@ mod tests {
             .actor_say("my_actor", "Hello")
             .choose(vec![
                 (
-                    "Choice 1",
+                    "Choice 1", None,
                     TalkBuilder::default().actor_say("actor_0", "Hi"),
                 ),
-                ("Choice 2", TalkBuilder::default().say("World!")),
+                ("Choice 2", None, TalkBuilder::default().say("World!")),
             ]);
 
         let (_, node_entities) = spawn_dialogue_entities(&builder, &mut app.world);
@@ -497,8 +497,8 @@ mod tests {
 
         let talk_builder = TalkBuilder::default()
             .choose(vec![
-                ("Choice Text".to_string(), TalkBuilder::default().say("t")),
-                ("Choice Text 2".to_string(), TalkBuilder::default().say("t")),
+                ("Choice Text".to_string(), None, TalkBuilder::default().say("t")),
+                ("Choice Text 2".to_string(), None, TalkBuilder::default().say("t")),
             ])
             .say("something");
 
@@ -604,8 +604,8 @@ mod integration_tests {
 
         for _ in 0..choice_node_number {
             talk_builder = talk_builder.choose(vec![
-                ("Choice1".to_string(), TalkBuilder::default().say("Hello")),
-                ("Choice2".to_string(), TalkBuilder::default().say("World!")),
+                ("Choice1".to_string(), None, TalkBuilder::default().say("Hello")),
+                ("Choice2".to_string(), None, TalkBuilder::default().say("World!")),
             ]);
         }
 
@@ -651,8 +651,8 @@ mod integration_tests {
         for i in 0..max_range {
             if i < choice_number {
                 talk_builder = talk_builder.choose(vec![
-                    ("Choice1".to_string(), TalkBuilder::default().say("Hello")),
-                    ("Choice2".to_string(), TalkBuilder::default().say("Hi!")),
+                    ("Choice1".to_string(), None, TalkBuilder::default().say("Hello")),
+                    ("Choice2".to_string(), None, TalkBuilder::default().say("Hi!")),
                 ]);
             }
             if i < say_number {
@@ -675,11 +675,11 @@ mod integration_tests {
 
         builder = builder.say("Hey").choose(vec![
             (
-                "Good Choice".to_string(),
+                "Good Choice".to_string(), None,
                 TalkBuilder::default().say("End of the conversation"),
             ),
             (
-                "Wrong Choice".to_string(),
+                "Wrong Choice".to_string(), None,
                 TalkBuilder::default()
                     .say("Go Back")
                     .connect_to(convo_start),
@@ -702,11 +702,11 @@ mod integration_tests {
         // Create the good path
         let good_branch = TalkBuilder::default().say("something").choose(vec![
             (
-                "Bad Choice".to_string(),
+                "Bad Choice".to_string(), None,
                 TalkBuilder::default().connect_to(end_node_id.clone()),
             ),
             (
-                "Another Good Choice".to_string(),
+                "Another Good Choice".to_string(), None,
                 TalkBuilder::default()
                     .say("Before the end...")
                     .connect_to(end_node_id),
@@ -714,9 +714,9 @@ mod integration_tests {
         ]);
 
         let builder = TalkBuilder::default().choose(vec![
-            ("Good Choice".to_string(), good_branch),
+            ("Good Choice".to_string(), None, good_branch),
             // If we never pass the actual biulder the end node would never be created
-            ("Bad Choice".to_string(), end_branch_builder),
+            ("Bad Choice".to_string(), None, end_branch_builder),
         ]);
         let mut world = World::default();
         BuildTalkCommand::new(world.spawn_empty().id(), builder).apply(&mut world);

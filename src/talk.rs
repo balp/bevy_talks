@@ -125,7 +125,7 @@ impl ChoiceNodeBundle {
     /// let mut world = World::default();
     /// let e = world.spawn_empty().id();
     ///
-    /// let bundle = ChoiceNodeBundle::new(vec![Choice::new("Choice 1", e)]);
+    /// let bundle = ChoiceNodeBundle::new(vec![Choice::new("Choice 1", None, e)]);
     ///
     /// assert_eq!(bundle.kind, NodeKind::Choice);
     /// assert_eq!(bundle.choices.0[0].text, "Choice 1".to_string());
@@ -151,6 +151,8 @@ pub struct Choices(pub Vec<Choice>);
 pub struct Choice {
     /// The text of the choice.
     pub text: String,
+    /// A possible check for this choice.
+    pub check: Option<String>,
     /// The next entity to go to if the choice is selected.
     pub next: Entity,
 }
@@ -166,13 +168,14 @@ impl Choice {
     /// let mut world = World::default();
     /// let e = world.spawn_empty().id();
     ///
-    /// let choice = Choice::new("Choice 1", e);
+    /// let choice = Choice::new("Choice 1", None, e);
     /// assert_eq!(choice.text, "Choice 1".to_string());
     /// assert_eq!(choice.next, e);
     /// ```
-    pub fn new(text: impl Into<String>, next: Entity) -> Self {
+    pub fn new(text: impl Into<String>, check: Option<String>, next: Entity) -> Self {
         Self {
             text: text.into(),
+            check,
             next,
         }
     }

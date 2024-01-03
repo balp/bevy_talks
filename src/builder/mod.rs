@@ -23,7 +23,7 @@ pub(crate) struct BuildNode {
     /// The text of the node to build. If it's a choice node, it will be empty.
     pub(crate) text: String,
     /// The choices of the node to build. If it's a talk node, it will be empty.
-    pub(crate) choices: Vec<(String, TalkBuilder)>,
+    pub(crate) choices: Vec<(String, Option<String>, TalkBuilder)>,
     /// The ids to add extra connections.
     pub(crate) manual_connections: Vec<BuildNodeId>,
     /// The actors slugs that are performing the node action.
@@ -172,18 +172,18 @@ impl TalkBuilder {
     /// use bevy_talks::prelude::TalkBuilder;
     ///
     /// TalkBuilder::default().choose(vec![
-    ///     ("Choice 1", TalkBuilder::default().say("Hello")),
-    ///     ("Choice 2", TalkBuilder::default().say("World!")),
+    ///     ("Choice 1", None, TalkBuilder::default().say("Hello")),
+    ///     ("Choice 2", None, TalkBuilder::default().say("World!")),
     /// ]).say("Hi");
     /// ```
-    pub fn choose(mut self, choices: Vec<(impl Into<String>, TalkBuilder)>) -> TalkBuilder {
+    pub fn choose(mut self, choices: Vec<(impl Into<String>, Option<String>, TalkBuilder)>) -> TalkBuilder {
         if choices.is_empty() {
             warn!("You attempted to add a choice node without any choices. It will be treated as a talk node to avoid dead ends.");
         }
 
         let choices = choices
             .into_iter()
-            .map(|(text, builder)| (text.into(), builder))
+            .map(|(text, check, builder)| (text.into(), check, builder))
             .collect::<Vec<_>>();
 
         let choice_node = BuildNode {
@@ -234,8 +234,8 @@ impl TalkBuilder {
     /// let mut builder = TalkBuilder::default().say("hello");
     /// let hello_id = builder.last_node_id();
     /// builder = builder.choose(vec![
-    ///     ("Choice 1".to_string(), TalkBuilder::default().say("Hello")),
-    ///     ("Choice 2".to_string(), TalkBuilder::default().connect_to(hello_id))
+    ///     ("Choice 1".to_string(), None, TalkBuilder::default().say("Hello")),
+    ///     ("Choice 2".to_string(), None, TalkBuilder::default().connect_to(hello_id))
     /// ]);
     /// ```
     ///
@@ -371,7 +371,7 @@ mod tests {
     fn choose_adds_a_choice_node(talk_builder: TalkBuilder) {
         let added_node = talk_builder
             .choose(vec![(
-                "Hello".to_string(),
+                "Hello".to_string(), None,
                 TalkBuilder::default().say("hello").to_owned(),
             )])
             .queue

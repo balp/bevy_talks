@@ -79,6 +79,8 @@ pub(crate) struct RonActor {
 pub(crate) struct RonChoice {
     /// The text of the choice.
     pub(crate) text: String,
+    /// A possible check for this choice
+    pub(crate) check: Option<String>,
     /// The ID of the next action to perform if the choice is selected.
     pub(crate) next: ActionId,
 }
@@ -87,6 +89,7 @@ impl From<RonChoice> for ChoiceData {
     fn from(val: RonChoice) -> Self {
         ChoiceData {
             text: val.text,
+            check: val.check,
             next: val.next,
         }
     }

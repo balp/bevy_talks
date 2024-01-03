@@ -41,6 +41,8 @@ pub(crate) struct Action {
 pub(crate) struct ChoiceData {
     /// The text of the choice.
     pub(crate) text: String,
+    /// A possible check for this choice.
+    pub(crate) check: Option<String>,
     /// The ID of the next action to perform if the choice is selected.
     pub(crate) next: ActionId,
 }
@@ -98,6 +100,7 @@ fn prepare_builder(
 
                 for c in the_action.choices.iter() {
                     let text = c.text.clone();
+                    let check = c.check.clone();
                     let next = c.next;
                     let mut inner_builder = TalkBuilder::default();
 
@@ -107,7 +110,7 @@ fn prepare_builder(
                     } else {
                         inner_builder = prepare_builder(next, actions, inner_builder, visited);
                     }
-                    choice_vec.push((text, inner_builder));
+                    choice_vec.push((text, check, inner_builder));
                 }
 
                 builder = builder.choose(choice_vec);
@@ -226,8 +229,8 @@ mod tests {
             0 =>
             Action {
                 choices: vec![
-                    ChoiceData { text: "Choice 1".to_string(), next: 1, },
-                    ChoiceData { text: "Choice 2".to_string(), next: 2, },
+                    ChoiceData { text: "Choice 1".to_string(), check: None, next: 1, },
+                    ChoiceData { text: "Choice 2".to_string(), check: None, next: 2, },
                 ],
                 kind: NodeKind::Choice,
                 ..default()
@@ -262,8 +265,8 @@ mod tests {
             2 =>
             Action {
                 choices: vec![
-                    ChoiceData { text: "Choice 1".to_string(), next: 3, },
-                    ChoiceData { text: "Choice 2".to_string(), next: 4, },
+                    ChoiceData { text: "Choice 1".to_string(), check: None, next: 3, },
+                    ChoiceData { text: "Choice 2".to_string(), check: None, next: 4, },
                 ],
                 kind: NodeKind::Choice,
                 ..default()
@@ -304,8 +307,8 @@ mod tests {
             0 => // entity: 2
             Action {
                 choices: vec![
-                    ChoiceData { text: "First Choice 1".to_string(), next: 1, },
-                    ChoiceData { text: "First Choice 2".to_string(), next: 2, },
+                    ChoiceData { text: "First Choice 1".to_string(), check: None, next: 1, },
+                    ChoiceData { text: "First Choice 2".to_string(), check: None, next: 2, },
                 ],
                 kind: NodeKind::Choice,
                 ..default()
@@ -315,8 +318,8 @@ mod tests {
             3 =>
             Action {
                 choices: vec![
-                    ChoiceData { text: "Second Choice 1".to_string(), next: 2, },
-                    ChoiceData { text: "Second Choice 2".to_string(), next: 4, },
+                    ChoiceData { text: "Second Choice 1".to_string(), check: None, next: 2, },
+                    ChoiceData { text: "Second Choice 2".to_string(), check: None, next: 4, },
                 ],
                 kind: NodeKind::Choice,
                 ..default()

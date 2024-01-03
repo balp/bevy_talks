@@ -315,8 +315,8 @@ mod tests {
 
         let script = indexmap! {
             1 => Action {  choices: vec![
-                ChoiceData {text: "Choice 1".to_string(), next: 2},
-                ChoiceData {text: "Choice 2".to_string(), next: 3}
+                ChoiceData {text: "Choice 1".to_string(), check: None, next: 2},
+                ChoiceData {text: "Choice 2".to_string(), check: None, next: 3}
                 ], kind: NodeKind::Choice, ..default() },
             2 => Action { kind: NodeKind::Leave, ..default() },
             3 => Action { text: "test".to_string(), ..default() },
